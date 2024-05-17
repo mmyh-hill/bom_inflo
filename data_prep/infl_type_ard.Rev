@@ -1,0 +1,44 @@
+morpho <- readDiscreteCharacterData("data/type.nexus")
+
+phylogeny <- readTrees("data/bom_only_MAP.tre")[1]
+
+moves = VectorMoves()
+monitors = VectorMonitors()
+
+rate_pr := phylogeny.treeLength() / 10
+
+NUM_STATES = 3
+
+NUM_RATES = NUM_STATES * (NUM_STATES-1)
+for ( i in 1:NUM_RATES ) {
+    rate[i] ~ dnExp(rate_pr)
+    moves.append( mvScale( rate[i], weight=2 ) )
+}
+
+Q_morpho := fnFreeK( rate, rescale=false )
+
+# root states
+rf_prior <- [1,1,1]
+rf ~ dnDirichlet( rf_prior )
+moves.append( mvBetaSimplex( rf, weight=2 ) )
+moves.append( mvDirichletSimplex( rf, weight=2 ) )
+
+phyMorpho ~ dnPhyloCTMC(tree=phylogeny, Q=Q_morpho, rootFrequencies=rf, type="Standard")
+phyMorpho.clamp(morpho)
+mymodel = model(phylogeny)
+monitors.append( mnModel(filename="output/infl_type_ard.log", printgen=10) )
+monitors.append( mnScreen(printgen=100) )
+monitors.append( mnJointConditionalAncestralState(tree=phylogeny,
+                                                   ctmc=phyMorpho,
+                                                   filename="output/infl_type_ard.states.txt",
+                                                   type="Standard",
+                                                   printgen=1,
+                                                   withTips=true,
+                                                   withStartStates=false) )
+
+mymcmc = mcmc(mymodel, monitors, moves, nruns=2)
+mymcmc.run(generations=25000, tuningInterval=200)
+->
+anc_states = readAncestralStateTrace("output/infl_type_ard.states.txt")
+anc_tree = ancestralStateTree(tree=phylogeny, ancestral_state_trace_vector=anc_states, include_start_states=false, file="output/infl_type_ase_ard.tree", burnin=0, summary_statistic="MAP", site=1)
+
