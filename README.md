@@ -5,6 +5,8 @@ Code for analysis on inflorescence evolution in Bomarea
 
 [Link](https://docs.google.com/spreadsheets/d/1tz5yj18hGkikD05JvuuDW6Y-gS-BnChY6fLEXKZQcnA/edit?usp=sharing) to datasheet on Google Drive.
 
+Trait coding and data sheet color legend is [here](https://drive.google.com/file/d/1-8_w90ZOqw7TNES3cnNXsbYn2YeAs0IH/view?usp=sharing). 
+
 data_prep scripts:
 - bomareacode.R: run analyses on coded traits
 - plotresults.R: plots ancestral state results
